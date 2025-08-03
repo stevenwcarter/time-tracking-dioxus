@@ -1,4 +1,11 @@
 Here are some recent changes:
+### [0.1.2](https://github.com/stevenwcarter/time-tracking-dioxus/compare/v0.1.1...v0.1.2) (2025-08-03)
+
+
+### Features
+
+* Enabling gzip compression and caching for static assets ([d9473ba](https://github.com/stevenwcarter/time-tracking-dioxus/commits/d9473bab47a16283186a39c9ccacc3c18e6d682e))
+
 ### 0.1.1 (2025-08-03)
 
 
