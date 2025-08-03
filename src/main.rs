@@ -171,16 +171,53 @@ pub fn TimeDisplay(time_entry: UsePersistent<String>) -> Element {
                 }
 
                 // Dead Time Section
-                if !dead.read().is_empty() && *dead.read() != "0 minutes" {
-                    div {
-                        class: "border-l-4 border-red-400 bg-red-50 p-4 mb-6",
-                        h3 {
-                            class: "text-sm font-medium text-red-800 mb-1",
-                            "Total Dead Time"
+                {
+                    let dead_minutes = data.read().dead_time_minutes;
+                    
+                    if dead_minutes == 0 {
+                        // Green display for no dead time
+                        rsx! {
+                            div {
+                                class: "border-l-4 border-green-400 bg-green-50 p-4 mb-6",
+                                h3 {
+                                    class: "text-sm font-medium text-green-800 mb-1",
+                                    "Dead Time"
+                                }
+                                p {
+                                    class: "text-lg font-semibold text-green-700",
+                                    "No dead time (gaps) found"
+                                }
+                            }
                         }
-                        p {
-                            class: "text-lg font-semibold text-red-700",
-                            "{dead} ({dead_decimal} hours)"
+                    } else if dead_minutes < 90 {
+                        // Yellow display for dead time under 90 minutes
+                        rsx! {
+                            div {
+                                class: "border-l-4 border-yellow-400 bg-yellow-50 p-4 mb-6",
+                                h3 {
+                                    class: "text-sm font-medium text-yellow-800 mb-1",
+                                    "Total Dead Time"
+                                }
+                                p {
+                                    class: "text-lg font-semibold text-yellow-700",
+                                    "{dead} ({dead_decimal} hours)"
+                                }
+                            }
+                        }
+                    } else {
+                        // Red display for dead time >= 90 minutes
+                        rsx! {
+                            div {
+                                class: "border-l-4 border-red-400 bg-red-50 p-4 mb-6",
+                                h3 {
+                                    class: "text-sm font-medium text-red-800 mb-1",
+                                    "Total Dead Time"
+                                }
+                                p {
+                                    class: "text-lg font-semibold text-red-700",
+                                    "{dead} ({dead_decimal} hours)"
+                                }
+                            }
                         }
                     }
                 }
