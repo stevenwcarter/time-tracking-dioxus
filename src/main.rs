@@ -1,4 +1,6 @@
 use dioxus::prelude::*;
+use dioxus_clipboard::prelude::use_clipboard;
+use dioxus::logger::tracing::*;
 use time_tracking_dioxus::hooks_composed::{use_persistent, UsePersistent};
 use time_tracking_parser::{parse_time_tracking_data, Time};
 
@@ -17,12 +19,18 @@ fn App() -> Element {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         div {
-            class: "flex",
-            TimeEntryArea {
-                time_entry,
-            }
-            TimeDisplay {
-                time_entry,
+            class: "min-h-screen bg-gray-50",
+            div {
+                class: "w-full max-w-7xl mx-auto px-4 py-8",
+                div {
+                    class: "flex flex-col md:flex-row gap-6 w-full",
+                    TimeEntryArea {
+                        time_entry,
+                    }
+                    TimeDisplay {
+                        time_entry,
+                    }
+                }
             }
         }
 
@@ -33,16 +41,21 @@ fn App() -> Element {
 pub fn TimeEntryArea(time_entry: UsePersistent<String>) -> Element {
     rsx! {
         div {
-            id: "time-entry-area",
-            textarea {
-                id: "time-entry-input",
-                value: "{time_entry.get()}",
-                oninput: move |e| time_entry.set(e.value()),
-                placeholder: "Enter your time entry here...",
-                rows: "4",
-                cols: "50"
+            class: "w-full md:w-1/2 bg-white rounded-lg shadow-sm border border-gray-200",
+            div {
+                class: "p-6",
+                h2 {
+                    class: "text-xl font-semibold text-gray-800 mb-4",
+                    "Time Entry"
+                }
+                textarea {
+                    id: "time-entry-input",
+                    class: "w-full h-64 p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-500 text-sm font-mono",
+                    value: "{time_entry.get()}",
+                    oninput: move |e| time_entry.set(e.value()),
+                    placeholder: "Enter your time tracking data here...\n\nExample:\n9:00 AM - 5:00 PM\nProject Alpha: Working on feature X\nProject Beta: Bug fixes\n\n2:00 PM - 2:15 PM (break)",
+                }
             }
-            // Additional content can be added here
         }
     }
 }
@@ -50,6 +63,7 @@ pub fn TimeEntryArea(time_entry: UsePersistent<String>) -> Element {
 #[component]
 pub fn TimeDisplay(time_entry: UsePersistent<String>) -> Element {
     let data = use_memo(move || parse_time_tracking_data(&time_entry.get()));
+    let mut clipboard = use_clipboard();
 
     let start_time = use_memo(move || data.read().formatted_start_time());
     let end_time = use_memo(move || data.read().formatted_end_time());
@@ -61,25 +75,139 @@ pub fn TimeDisplay(time_entry: UsePersistent<String>) -> Element {
 
     rsx! {
         div {
-            class: "flex flex-col p-4",
-            p {
-                "Start Time: {start_time} End Time: {end_time}"
-            }
-            p {
-                "Total Working Time: {total} ({total_decimal} hours)"
-            }
-            p {
-                "Total Dead Time: {dead} ({dead_decimal} hours)"
-            }
-            for project in projects.iter() {
-                h3 {
-                    class: "text-xl",
-                    "Project: {project.name} Total Time: {Time::format_duration_minutes(project.total_minutes)} ({Time::format_duration_decimal(project.total_minutes)} hours)"
+            class: "w-full md:w-1/2 bg-white rounded-lg shadow-sm border border-gray-200",
+            div {
+                class: "p-6",
+                h2 {
+                    class: "text-xl font-semibold text-gray-800 mb-6",
+                    "Time Summary"
                 }
-                for note in &project.notes {
+                
+                // Time Overview Section
+                div {
+                    class: "bg-blue-50 rounded-lg p-4 mb-6",
+                    div {
+                        class: "grid grid-cols-1 sm:grid-cols-2 gap-4",
+                        div {
+                            class: "text-center",
+                            p {
+                                class: "text-sm text-gray-600 font-medium",
+                                "Start Time"
+                            }
+                            p {
+                                class: "text-lg font-semibold text-blue-700",
+                                "{start_time}"
+                            }
+                        }
+                        div {
+                            class: "text-center",
+                            p {
+                                class: "text-sm text-gray-600 font-medium",
+                                "End Time"
+                            }
+                            p {
+                                class: "text-lg font-semibold text-blue-700",
+                                "{end_time}"
+                            }
+                        }
+                    }
+                }
+
+                // Working Time Section
+                div {
+                    class: "border-l-4 border-green-400 bg-green-50 p-4 mb-4",
+                    h3 {
+                        class: "text-sm font-medium text-green-800 mb-1",
+                        "Total Working Time"
+                    }
                     p {
-                        class: "ml-4",
-                        "- {note}"
+                        class: "text-lg font-semibold text-green-700",
+                        "{total} ({total_decimal} hours)"
+                    }
+                }
+
+                // Dead Time Section
+                if !dead.read().is_empty() && *dead.read() != "0 minutes" {
+                    div {
+                        class: "border-l-4 border-red-400 bg-red-50 p-4 mb-6",
+                        h3 {
+                            class: "text-sm font-medium text-red-800 mb-1",
+                            "Total Dead Time"
+                        }
+                        p {
+                            class: "text-lg font-semibold text-red-700",
+                            "{dead} ({dead_decimal} hours)"
+                        }
+                    }
+                }
+
+                // Projects Section
+                if !projects.is_empty() {
+                    div {
+                        h3 {
+                            class: "text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2",
+                            "Projects"
+                        }
+                        div {
+                            class: "space-y-4",
+                            for project in projects.iter() {
+                                div {
+                                    class: "bg-gray-50 rounded-lg p-4 border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors",
+                                    onclick: {
+                                        let project_notes = project.notes.clone();
+                                        move |_| {
+                                            let notes_text = project_notes.iter()
+                                                .map(|note| format!("- {note}"))
+                                                .collect::<Vec<_>>()
+                                                .join("\n");
+                                            
+                                            match clipboard.set(notes_text.clone()) {
+                                                Ok(_) => {
+                                                    info!("Successfully copied to clipboard: {notes_text}");
+                                                }
+                                                Err(e) => {
+                                                    warn!("Failed to copy to clipboard: {e:?}");
+                                                }
+                                            }
+                                        }
+                                    },
+                                    div {
+                                        class: "flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3",
+                                        h4 {
+                                            class: "text-base font-semibold text-gray-800",
+                                            "{project.name}"
+                                        }
+                                        span {
+                                            class: "text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full mt-1 sm:mt-0",
+                                            "{Time::format_duration_minutes(project.total_minutes)} ({Time::format_duration_decimal(project.total_minutes)} hrs)"
+                                        }
+                                    }
+                                    if !project.notes.is_empty() {
+                                        div {
+                                            class: "space-y-1",
+                                            for note in &project.notes {
+                                                p {
+                                                    class: "text-sm text-gray-600 flex items-start",
+                                                    span {
+                                                        class: "text-gray-400 mr-2 mt-0.5 text-xs",
+                                                        "-"
+                                                    }
+                                                    span { "{note}" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    div {
+                        class: "text-center py-8 text-gray-500",
+                        p {
+                            class: "text-sm",
+                            "No projects found. Enter your time tracking data to see the breakdown."
+                        }
                     }
                 }
             }

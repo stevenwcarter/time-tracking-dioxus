@@ -8,6 +8,7 @@ edition = "2021"
 
 [dependencies]
 dioxus = { version = "0.6.0", features = [] }
+dioxus-clipboard = "0.2.0"
 gloo-storage = "0.3.0"
 serde = "1.0.219"
 time-tracking-parser = { git = "https://github.com/stevenwcarter/time-tracking-parser" }
