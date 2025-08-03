@@ -39,21 +39,62 @@ fn App() -> Element {
 
 #[component]
 pub fn TimeEntryArea(time_entry: UsePersistent<String>) -> Element {
+    let mut show_help = use_signal(|| false);
+
     rsx! {
         div {
             class: "w-full md:w-1/2 bg-white rounded-lg shadow-sm border border-gray-200",
             div {
                 class: "p-6",
-                h2 {
-                    class: "text-xl font-semibold text-gray-800 mb-4",
-                    "Time Entry"
+                div {
+                    class: "flex justify-between items-center mb-4",
+                    h2 {
+                        class: "text-xl font-semibold text-gray-800",
+                        "Time Entry"
+                    }
+                    button {
+                        class: "px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors",
+                        onclick: move |_| time_entry.set(String::new()),
+                        "Clear"
+                    }
                 }
                 textarea {
                     id: "time-entry-input",
                     class: "w-full h-64 p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-500 text-sm font-mono",
                     value: "{time_entry.get()}",
                     oninput: move |e| time_entry.set(e.value()),
-                    placeholder: "Enter your time tracking data here...\n\nExample:\n9:00 AM - 5:00 PM\nProject Alpha: Working on feature X\nProject Beta: Bug fixes\n\n2:00 PM - 2:15 PM (break)",
+                    placeholder: "Enter your time tracking data here...\n\nExample:\n11:45-12:15 code1\n- Comment explaining what you did\n12:15-1:30 code2\n- Comment about what you were doing\n1:30-2 code1\n2-4 code3",
+                }
+                
+                // Help Section
+                div {
+                    class: "mt-4",
+                    button {
+                        class: "flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors",
+                        onclick: move |_| {
+                            let current = *show_help.read();
+                            show_help.set(!current);
+                        },
+                        span {
+                            class: "mr-1",
+                            if *show_help.read() { "▼" } else { "▶" }
+                        }
+                        "How to use this tool"
+                    }
+                    
+                    if *show_help.read() {
+                        div {
+                            class: "mt-3 p-4 bg-blue-50 rounded-lg border border-blue-200",
+                            p {
+                                class: "text-sm text-gray-700 mb-3",
+                                "You should enter your time in the format shown below. \"code1\" and \"code2\" can be anything you'd like, and the time will be aggregated together, even if you work on other time codes in the interim. You can try copying the data below into the text area to see a sample report. From the report, you can then note the time and copy the comments into the notes field in your time tracker."
+                            }
+                            pre {
+                                class: "text-sm font-mono bg-gray-100 p-3 rounded border text-gray-800 whitespace-pre-wrap",
+                                "11:45-12:15 code1\n- Comment explaining what you did\n12:15-1:30 code2\n- Comment about what you were doing\n1:30-2 code1\n2-4 code3"
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -65,6 +106,8 @@ pub fn TimeDisplay(time_entry: UsePersistent<String>) -> Element {
     let data = use_memo(move || parse_time_tracking_data(&time_entry.get()));
     let mut clipboard = use_clipboard();
 
+    info!("Parsed time tracking data: {data:?}");
+
     let start_time = use_memo(move || data.read().formatted_start_time());
     let end_time = use_memo(move || data.read().formatted_end_time());
     let total_decimal = use_memo(move || data.read().formatted_total_decimal());
@@ -72,6 +115,7 @@ pub fn TimeDisplay(time_entry: UsePersistent<String>) -> Element {
     let dead = use_memo(move || data.read().formatted_dead_time_minutes());
     let dead_decimal = use_memo(move || data.read().formatted_dead_decimal());
     let projects = use_memo(move || data.read().projects.clone());
+    let warnings = use_memo(move || data.read().warnings.clone());
 
     rsx! {
         div {
@@ -137,6 +181,30 @@ pub fn TimeDisplay(time_entry: UsePersistent<String>) -> Element {
                         p {
                             class: "text-lg font-semibold text-red-700",
                             "{dead} ({dead_decimal} hours)"
+                        }
+                    }
+                }
+
+                // Warnings Section
+                if !warnings.read().is_empty() {
+                    div {
+                        class: "border-l-4 border-yellow-400 bg-yellow-50 p-4 mb-6",
+                        h3 {
+                            class: "text-sm font-medium text-yellow-800 mb-2",
+                            "Warnings"
+                        }
+                        div {
+                            class: "space-y-1",
+                            for warning in warnings.read().iter() {
+                                p {
+                                    class: "text-sm text-yellow-700 flex items-start",
+                                    span {
+                                        class: "text-yellow-500 mr-2 mt-0.5 text-xs",
+                                        "⚠"
+                                    }
+                                    span { "{warning}" }
+                                }
+                            }
                         }
                     }
                 }
