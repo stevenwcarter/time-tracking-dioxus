@@ -1,3 +1,4 @@
+[release]
 sign-commit = true
 sign-tag = true
 push = true
