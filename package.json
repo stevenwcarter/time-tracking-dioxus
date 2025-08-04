@@ -4,11 +4,7 @@
   "private": true,
   "author": "Steven Carter",
   "description": "A time tracking application built with Dioxus and Tailwind CSS",
-  "scripts": {
-    "release": "standard-version -s"
-  },
   "devDependencies": {
-    "standard-version": "^9.5.0",
     "@tailwindcss/cli": "^4.1.11",
     "tailwindcss": "^4.1.11"
   }

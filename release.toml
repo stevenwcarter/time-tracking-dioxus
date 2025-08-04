@@ -1,0 +1,6 @@
+sign-commit = true
+sign-tag = true
+push = true
+consolidate-commits = true
+tag-message = "chore: release {{version}}"
+changelog = true

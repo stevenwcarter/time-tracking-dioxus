@@ -9,6 +9,8 @@ edition = "2021"
 [dependencies]
 dioxus = { version = "0.6.0", features = [] }
 dioxus-clipboard = "0.2.0"
+dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1" }
+dioxus-time = { version = "0.1.0-alpha.1" }
 gloo-storage = "0.3.0"
 serde = "1.0.219"
 time-tracking-parser = { git = "https://github.com/stevenwcarter/time-tracking-parser" }
