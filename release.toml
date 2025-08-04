@@ -3,4 +3,13 @@ sign-tag = true
 push = true
 consolidate-commits = true
 tag-message = "chore: release {{version}}"
-changelog = true
+pre-release-hook = [
+  "git",
+  "cliff",
+  "-c",
+  "github",
+  "-o",
+  "CHANGELOG.md",
+  "--tag",
+  "{{version}}",
+]
