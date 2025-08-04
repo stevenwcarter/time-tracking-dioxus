@@ -4341,6 +4341,9 @@ dependencies = [
  "gloo-storage",
  "serde",
  "time-tracking-parser",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]

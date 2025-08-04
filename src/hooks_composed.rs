@@ -1,3 +1,4 @@
+use dioxus::logger::tracing::*;
 use dioxus::prelude::*;
 use gloo_storage::{LocalStorage, Storage};
 use serde::{de::DeserializeOwned, Serialize};
@@ -51,7 +52,14 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> UsePersistent<T> {
     pub fn set(&mut self, value: T) {
         let mut inner = self.inner.write();
         // Write the new value to local storage
-        LocalStorage::set(inner.key.as_str(), &value);
+        match LocalStorage::set(inner.key.as_str(), &value) {
+            Ok(_) => {
+                debug!("Set value in local storage: {}", inner.key);
+            }
+            Err(e) => {
+                error!("Failed to set value in local storage: {}", e);
+            }
+        }
         inner.value = value;
     }
 }
