@@ -1,6 +1,7 @@
 sign-commit = true
 sign-tag = true
 push = true
+publish = false
 consolidate-commits = true
 tag-message = "chore: release {{version}}"
 pre-release-hook = [
